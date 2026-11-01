@@ -173,6 +173,7 @@ private:
   FEXCore::CPUID::FunctionResults Function_04h(uint32_t Leaf) const;
   FEXCore::CPUID::FunctionResults Function_06h(uint32_t Leaf) const;
   FEXCore::CPUID::FunctionResults Function_07h(uint32_t Leaf) const;
+  FEXCore::CPUID::FunctionResults Function_0Bh(uint32_t Leaf) const;
   FEXCore::CPUID::FunctionResults Function_0Dh(uint32_t Leaf) const;
   FEXCore::CPUID::FunctionResults Function_15h(uint32_t Leaf) const;
   FEXCore::CPUID::FunctionResults Function_1Ah(uint32_t Leaf) const;
@@ -231,8 +232,12 @@ private:
     &CPUIDEmu::Function_Reserved,
     // 0x0A: Architectural performance monitoring
     &CPUIDEmu::Function_Reserved,
-    // 0x0B: Extended topology enumeration
+  // 0x0B: Extended topology enumeration
+#ifndef CPUID_AMD
+    &CPUIDEmu::Function_0Bh,
+#else
     &CPUIDEmu::Function_Reserved,
+#endif
     // 0x0C: Reserved?
     &CPUIDEmu::Function_Reserved,
     // 0x0D: Processor extended state enumeration
@@ -343,8 +348,12 @@ private:
     {SupportsConstant::CONSTANT, NeedsLeafConstant::NOLEAFCONSTANT},
     // 0x0A: Architectural performance monitoring
     {SupportsConstant::CONSTANT, NeedsLeafConstant::NOLEAFCONSTANT},
-    // 0x0B: Extended topology enumeration
+  // 0x0B: Extended topology enumeration
+#ifndef CPUID_AMD
+    {SupportsConstant::NONCONSTANT, NeedsLeafConstant::NEEDSLEAFCONSTANT},
+#else
     {SupportsConstant::CONSTANT, NeedsLeafConstant::NOLEAFCONSTANT},
+#endif
     // 0x0C: Reserved?
     {SupportsConstant::CONSTANT, NeedsLeafConstant::NOLEAFCONSTANT},
     // 0x0D: Processor extended state enumeration
