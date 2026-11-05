@@ -20,6 +20,7 @@ $end_info$
 
 #include "git_version.h"
 
+#include <bit>
 #include <cstring>
 
 namespace FEXCore {
@@ -870,6 +871,25 @@ FEXCore::CPUID::FunctionResults CPUIDEmu::Function_07h(uint32_t Leaf) const {
   return Res;
 }
 
+FEXCore::CPUID::FunctionResults CPUIDEmu::Function_0Bh(uint32_t Leaf) const {
+  FEXCore::CPUID::FunctionResults Res {};
+  Res.ecx = Leaf & 0xFF;
+  Res.edx = GetCPUID();
+
+  // Match the existing topology: one package, one logical processor per core.
+  if (Leaf == 0) {
+    Res.ebx = 1;
+    Res.ecx |= 1 << 8; // SMT level, with no SMT ID bits.
+  } else if (Leaf == 1) {
+    Res.eax = std::bit_width(Cores - 1);
+    Res.ebx = Cores;
+    Res.ecx |= 2 << 8; // Core level.
+  }
+
+  // Higher subleaves terminate enumeration with level type and count zero.
+  return Res;
+}
+
 FEXCore::CPUID::FunctionResults CPUIDEmu::Function_0Dh(uint32_t Leaf) const {
   // Leaf 0
   FEXCore::CPUID::FunctionResults Res {};
@@ -1235,9 +1255,9 @@ FEXCore::CPUID::FunctionResults CPUIDEmu::Function_8000_0008h(uint32_t Leaf) con
             (CTX->HostFeatures.SupportsCLZERO << 0); // CLZERO support
 
   uint32_t CoreCount = Cores - 1;
-  Res.ecx = (0 << 16) |                    // PerfTscSize: Performance timestamp count size
-            (std::bit_ceil(Cores) << 12) | // ApicIdSize: Number of bits in ApicID
-            (CoreCount << 0);              // Count count subtract one
+  Res.ecx = (0 << 16) |                         // PerfTscSize: Performance timestamp count size
+            (std::bit_width(Cores - 1) << 12) | // ApicIdSize: Number of bits in ApicID
+            (CoreCount << 0);                   // Count count subtract one
 
   return Res;
 }
