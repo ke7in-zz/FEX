@@ -1,4 +1,15 @@
-# FEXCore custom CPUID functions
+# FEXCore CPUID functions
+
+## 0000_000Bh - Extended processor topology
+
+The Intel-compatible model reports one package with one logical processor per core, consistent with FEX's other CPU-count leaves.
+
+* Subleaf 0 reports the SMT level: one logical processor and zero SMT ID bits.
+* Subleaf 1 reports the core level: the configured CPU count and the number of bits needed to address those CPUs.
+* Higher subleaves terminate enumeration with zero level type and processor count. ECX[7:0] retains the subleaf number.
+* EDX uses the same current CPU ID as the legacy APIC-ID field in CPUID.1.
+
+The APIC-ID-size field in 8000_0008h likewise reports a bit count, including for non-power-of-two CPU counts.
 
 ## 4000_0000h - Hypervisor information function
 * Follows VMWare and Microsoft's hypervisor information proposal

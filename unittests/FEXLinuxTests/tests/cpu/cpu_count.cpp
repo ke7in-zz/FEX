@@ -103,3 +103,24 @@ TEST_CASE("cpu count - cpuid") {
     CHECK(core_info->cores == core_info->threads);
   }
 }
+
+TEST_CASE("cpu count - extended topology") {
+  const auto vendor = get_cpuid(0);
+  if (vendor.eax < 0xB || vendor.ebx != 0x756e6547 || vendor.edx != 0x49656e69 || vendor.ecx != 0x6c65746e) {
+    SKIP("Intel extended topology is not advertised");
+  }
+
+  const auto smt = get_cpuid(0xB, 0);
+  const auto package = get_cpuid(0xB, 1);
+  CHECK((smt.ecx & 0xFFFF) == 0x100);
+  CHECK((package.ecx & 0xFFFF) == 0x201);
+  REQUIRE(smt.ebx == 1);
+  CHECK(package.ebx / smt.ebx == std::thread::hardware_concurrency());
+  REQUIRE(package.eax < 32);
+  CHECK((1U << package.eax) >= package.ebx);
+
+  const auto end = get_cpuid(0xB, 2);
+  CHECK(end.eax == 0);
+  CHECK(end.ebx == 0);
+  CHECK(end.ecx == 2);
+}
